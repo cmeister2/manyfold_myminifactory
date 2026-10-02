@@ -3,3 +3,5 @@ en:
     errors:
       request_failed: "Could not get MyMiniFactory model details."
       sync_failed: "Could not sync the MyMiniFactory model."
+      creator_request_failed: "Could not get the MyMiniFactory creator profile."
+      creator_sync_failed: "Could not sync the MyMiniFactory creator profile."

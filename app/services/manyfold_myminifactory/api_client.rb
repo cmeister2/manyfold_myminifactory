@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "faraday"
+require "uri"
 
 module ManyfoldMyminifactory
   class ApiClient
@@ -14,6 +15,10 @@ module ManyfoldMyminifactory
     class RateLimited < Error; end
     class Unavailable < Error; end
     class InvalidResponse < Error; end
+
+    def self.configured?
+      !SiteSettings.myminifactory_api_key.to_s.strip.empty?
+    end
 
     def initialize(api_key: SiteSettings.myminifactory_api_key, connection: nil)
       @api_key = api_key.to_s.strip
@@ -43,6 +48,34 @@ module ManyfoldMyminifactory
       raise Unavailable, "MyMiniFactory could not be reached. Try again later.", cause: nil
     end
 
+    def creator(username)
+      unless CreatorSource.valid_username?(username)
+        raise InvalidObjectId, "Enter a MyMiniFactory creator username."
+      end
+      if @api_key.empty?
+        raise ConfigurationError, "Set the MyMiniFactory API key in Manyfold's integration settings."
+      end
+
+      escaped_username = URI.encode_www_form_component(username).gsub("+", "%20")
+      response = connection.get("users/#{escaped_username}", {key: @api_key}, {"Accept" => "application/json"})
+      check_status!(response.status, resource: "creator")
+      payload = response.body
+      source = begin
+        CreatorSource.from_payload(payload)
+      rescue CreatorSource::Invalid
+        nil
+      end
+      unless payload.is_a?(Hash) && payload.keys.all? { |key| key.is_a?(String) } &&
+          source && source.username.casecmp?(username)
+        raise InvalidResponse, "MyMiniFactory returned an invalid creator response."
+      end
+      payload
+    rescue Faraday::ParsingError
+      raise InvalidResponse, "MyMiniFactory returned an unreadable response.", cause: nil
+    rescue Faraday::Error
+      raise Unavailable, "MyMiniFactory could not be reached. Try again later.", cause: nil
+    end
+
     private
 
     def connection
@@ -53,14 +86,14 @@ module ManyfoldMyminifactory
       end
     end
 
-    def check_status!(status)
+    def check_status!(status, resource: "model")
       case status
       when 200
         nil
       when 401, 403
-        raise AuthenticationError, "MyMiniFactory denied access. Check the API key and model access."
+        raise AuthenticationError, "MyMiniFactory denied access. Check the API key and #{resource} access."
       when 404
-        raise NotFound, "MyMiniFactory could not find that model."
+        raise NotFound, "MyMiniFactory could not find that #{resource}."
       when 429
         raise RateLimited, "MyMiniFactory is limiting requests. Try again later."
       else
