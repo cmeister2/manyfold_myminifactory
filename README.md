@@ -29,6 +29,12 @@ For an existing Manyfold model, choose **Link to MyMiniFactory** from its menu. 
 
 JSON import alone does not create Manyfold models. Creating or syncing a model imports its details and images; download its 3D model files from MyMiniFactory and import them into Manyfold separately.
 
+## Sync creators
+
+On the **Creators** page, choose **Link to MyMiniFactory** from a creator's menu, select one of their linked models, and choose **Link and sync**. The plugin uses that model to find the MyMiniFactory profile and sync the existing creator's name, biography, avatar, and banner. It preserves their ownership and model associations.
+
+The action requires an API key and administrator access, a visible MyMiniFactory-linked model assigned to the creator, and no existing MyMiniFactory profile link. Once linked, use Manyfold's normal **Synchronize** action to refresh the profile.
+
 ## Provider navigation
 
 The plugin adds MyMiniFactory to a shared **Providers** dropdown. The menu helper is bundled, so no additional plugin is required.
