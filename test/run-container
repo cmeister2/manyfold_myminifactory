@@ -3,6 +3,8 @@ set -eu
 
 plugin_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 source_root=$(CDPATH= cd -- "$1" && pwd)
+# Use the development image by default; CI can also test the oldest supported host.
+manyfold_image=${MANYFOLD_TEST_IMAGE:-$(sed -n '1s/^FROM //p' "$plugin_root/Dockerfile")}
 
 docker run --rm --pull=missing --network none \
   --entrypoint /plugins/manyfold_myminifactory/test/run \
@@ -17,4 +19,4 @@ docker run --rm --pull=missing --network none \
   --env SECRET_KEY_BASE=manyfold-myminifactory-disposable-local-test-secret-with-no-real-data \
   --env MANYFOLD_MYMINIFACTORY_TEST=1 \
   --env "MANYFOLD_MYMINIFACTORY_EXPECTED_VERSION=${2:-}" \
-  manyfold3d/manyfold-solo:0.146.0
+  "$manyfold_image"

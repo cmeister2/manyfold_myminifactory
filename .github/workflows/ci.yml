@@ -15,9 +15,15 @@ concurrency:
 
 jobs:
   test:
-    name: Test plugin and package
+    name: Test plugin and package (Manyfold ${{ matrix.manyfold }})
     runs-on: ubuntu-26.04
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        manyfold: ["0.146.0", "0.154.0"]
+    env:
+      MANYFOLD_TEST_IMAGE: manyfold3d/manyfold-solo:${{ matrix.manyfold }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
