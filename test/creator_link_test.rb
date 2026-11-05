@@ -157,7 +157,7 @@ class MyMiniFactoryPluginTest
       model.update!(sensitive: false)
       token = form.at_css('input[name="authenticity_token"]')["value"]
       assert_creator_link_forbidden(session, "missing-fictional-creator", source_link.id, token)
-      creator.federails_actor.update_columns(local: false)
+      federation_actor(creator).update_columns(local: false)
       assert_creator_link_forbidden(session, creator.to_param, source_link.id, token)
       assert_empty creator_link_jobs
       assert_empty creator.links.reload
@@ -246,9 +246,9 @@ class MyMiniFactoryPluginTest
       client = FakeCreatorLinkClient.new(fake_creator_link_payload)
       with_link_client(client) do
         ManyfoldMyminifactory::CreatorSyncJob.perform_now(creator.id, @users.last.id, source_link.id)
-        creator.federails_actor.update_columns(local: false)
+        federation_actor(creator).update_columns(local: false)
         ManyfoldMyminifactory::CreatorSyncJob.perform_now(creator.id, @users.first.id, source_link.id)
-        creator.federails_actor.update_columns(local: true)
+        federation_actor(creator).update_columns(local: true)
         SiteSettings.myminifactory_api_key = nil
         ManyfoldMyminifactory::CreatorSyncJob.perform_now(creator.id, @users.first.id, source_link.id)
         SiteSettings.myminifactory_api_key = "fictional-creator-api-key"
@@ -413,7 +413,7 @@ class MyMiniFactoryPluginTest
       source_link = model.links.create!(url: "https://www.myminifactory.com/object/example-92001")
       yield creator, model, source_link
     ensure
-      creator&.federails_actor&.update_columns(local: true) if creator&.persisted?
+      federation_actor(creator)&.update_columns(local: true) if creator&.persisted?
     end
   end
 
